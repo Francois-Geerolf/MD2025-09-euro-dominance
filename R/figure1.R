@@ -2,70 +2,31 @@ source("_rinit.R")
 
 ## Load Eurostat datasets ------
 
-datasets_eurostat <- c("prc_hicp_manr", "prc_hicp_ctrb")
+load("~/iCloud/website/data/bis/XRU_D.RData")
+load("~/iCloud/website/data/flags/colors.RData")
 
-for (dataset in datasets_eurostat){
-  assign(dataset, 
-         get_eurostat(dataset, stringsAsFactors = F, cache = F) |>
-           rename(date = TIME_PERIOD)
-  )
-}
-
-## English -------
-
-Sys.setlocale("LC_TIME", "en_US.UTF-8")
-
-figure2_line <- prc_hicp_manr %>%
-  filter(coicop %in% c("CP00"),
-         geo == "EA") %>%
-  filter(date >= as.Date("2019-01-01")) %>%
-  bind_rows(prc_hicp_ctrb %>%
-              filter(coicop %in% c("SERV", "IGD_NNRG"),
-                     geo == "EA") %>%
-              filter(date >= as.Date("2019-01-01")) %>%
-              group_by(date, unit, geo) %>%
-              summarise(values = sum(values)) %>%
-              ungroup %>%
-              mutate(coicop  = "TOT_X_NRG_FOOD")) %>%
-  mutate(Line = factor(coicop, levels = c("CP00", "TOT_X_NRG_FOOD"),
-                       labels = c("Inflation (HICP)", "Inflation without energy and food"))) %>%
-  select(date, Line, values)
+figure1 <- XRU_D |>
+  filter(iso3c %in% c("DEU", "FRA", "GBR"),
+         date >= as.Date("1980-01-01"),
+         date <= as.Date("1990-01-01")) |>
+  select(date, value, `Reference area`) |>
+  left_join(colors, by = c("Reference area" = "country")) 
 
 
-figure2 <- prc_hicp_ctrb %>%
-  filter(coicop %in% c("FOOD", "NRG", "IGD_NNRG", "SERV"),
-         geo == "EA") %>%
-  select(-geo, -unit) %>%
-  filter(date >= as.Date("2019-01-01")) %>%
-  select(date, coicop, values)
+write.csv(figure1, "csv/figure1.csv")
 
-figure2 %>%
-  mutate(Coicop_factor = factor(coicop, levels = c("SERV", "IGD_NNRG", "FOOD", "NRG"),
-                                labels = c("Services",
-                                           "Manufactured goods",
-                                           "Food",
-                                           "Energy"))) %>%
-  ggplot(., aes(x = date, y = values/100)) +
-  geom_col(aes(fill = Coicop_factor), alpha = 1) +
-  geom_line(data = figure2_line, aes(linetype = Line), size = 1.2) +
-  theme_minimal() + xlab("") + ylab("Contributions to inflation in the Euro area") +
-  # c("orange", "red", "blue", "darkgreen")
-  scale_fill_manual(values = viridis(4)[1:4]) +
-  scale_x_date(breaks = "6 months",
-               expand = c(.01, 0), date_labels = "%b %Y") +
-  scale_y_continuous(breaks = 0.01*seq(-10, 30, 1),
-                     labels = percent_format(accuracy = 1)) +
-  theme(legend.position = c(0.2, 0.77),
+ggplot(data = figure1) + geom_line(aes(x = date, y = value, color = color)) +
+  theme_minimal() + xlab("") + ylab("National Currency Per USD") +
+  scale_x_date(breaks = seq(1940, 2030, 1) %>% paste0("-01-01") %>% as.Date,
+               labels = date_format("%Y")) +
+  scale_y_log10(breaks = seq(0, 10, 0.2),
+                labels = dollar_format(accuracy = 0.1, prefix = "", suffix = "../$")) +
+  theme(legend.position = c(0.6, 0.1),
         legend.title = element_blank(),
-        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
-        legend.key.size = unit(0.4, "cm"))
+        legend.direction = "horizontal") +
+  scale_color_identity()
 
 
 
-write.csv(figure2, "csv/figure2.csv")
-write.csv(figure2_line, "csv/figure2_line.csv")
-
-ggsave("pdf/figure2.pdf", width = 7, height = 4, device = cairo_pdf)
-ggsave("png/figure2.png", width = 7, height = 4)
-
-
+ggsave("pdf/figure1.pdf", width = 7, height = 4, device = cairo_pdf)
+ggsave("png/figure1.png", width = 7, height = 4)
