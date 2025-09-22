@@ -11,7 +11,7 @@ Authors: Christophe BLOT, Jérôme CREEL, François GEEROLF, Giovanni RICCO
 
 We provide files to replicate the data in [this working paper]():
 
-### Figure 1: 
+### Figure 1: Exchange rates around the Plaza accords
 
 [R code](R/figure1.R)
 
