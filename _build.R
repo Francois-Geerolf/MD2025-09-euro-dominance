@@ -1,7 +1,7 @@
 # build.R
 
 # Define the range of figures to include
-figure_numbers <- 2:8
+figure_numbers <- c(1, 6)
 
 # Loop over each figure script and source it
 for (i in figure_numbers) {

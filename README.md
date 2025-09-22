@@ -17,3 +17,11 @@ We provide files to replicate the data in [this working paper]():
 
 ![Figure 1](png/figure1.png)
 
+### Figure 6: Interest rates on long-term government bonds
+
+[R code](R/figure6.R)
+
+![Figure 6](png/figure6.png)
+
+
+
